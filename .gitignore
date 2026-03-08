@@ -1,0 +1,23 @@
+# Entornos virtuales
+.venv/
+workspace.code-workspace
+
+# Python cache
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Datos del sistema (Privacidad)
+data/*.db
+data/*.sqlite
+data/solar_data.db
+
+# Archivos de Streamlit
+.streamlit/
+
+# Archivos de sistema / IDE
+.vscode/
+.idea/
+Thumbs.db
+[Ee]thernet.txt
+.pytest_cache/
