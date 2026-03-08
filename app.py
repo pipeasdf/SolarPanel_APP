@@ -193,7 +193,7 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("### 📍 Ubicación")
-    st.markdown("La Unión, Los Ríos, Chile")
+    st.markdown("Chile")
     
     st.markdown("---")
     st.markdown("### ℹ️ Notas")
