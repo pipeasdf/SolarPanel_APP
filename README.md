@@ -1,211 +1,80 @@
-# ☀️ Solar Panel Monitoring App
+# ☀️ Victron Solar History & Monitoring App
+> **Preserving and analyzing your off-grid energy data beyond the 30-day limit.**
 
-Sistema de monitoreo para paneles solares Victron con análisis de CSV, cálculo de SOC y alertas automáticas.
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-3-green.svg)](https://www.sqlite.org/)
 
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)
-![SQLite](https://img.shields.io/badge/SQLite-3-green.svg)
+## 📋 The Problem & Solution
 
-## 📋 Descripción
+As an **Off-Grid** solar user with a **Victron VE.Direct Bluetooth Dongle**, the official VictronConnect app only stores **30 days of historical data**. This makes it impossible to perform long-term seasonal analysis or track the system's performance over the years.
 
-Aplicación web ligera desarrollada en Streamlit para usuarios de sistemas fotovoltaicos Victron. Permite:
+This application was developed to:
+1. **Bypass the 30-day limit**: By importing CSV reports from the Victron app, this local tool stores your entire history in a permanent SQLite database.
+2. **Dynamic Financial Analysis**: Even though the system is Off-Grid, this tool calculates "Theoretical Savings" by comparing solar production against real electricity company rates.
+3. **Advanced Battery Health**: Provides automated SOC (State of Charge) estimation and deep discharge alerts for 48V battery banks.
 
-- **Subir y validar CSV** generados por Victron VE.Direct / MPPT / inversor
-- **Almacenar datos** en SQLite con SQLAlchemy
-- **Visualizar dashboard** con gráficos interactivos (Plotly)
-- **Calcular SOC** del banco de baterías 48V
-- **Detectar alertas** de descarga profunda y problemas de carga
-- **Exportar informes** en CSV/Excel
+## 🚀 Key Features
 
-## 🚀 Inicio Rápido
+- **📤 Data Persistence**: Upload CSV files exported from VictronConnect and build a lifetime history.
+- **📊 Interactive Dashboard**: High-level KPIs and detailed charts (Plotly) for yield (Wh), battery voltages, and charge stages (Bulk/Absorption/Float).
+- **💰 Financial Module**: Custom configuration of energy costs (kWh price, fixed charges, meter rental) to track ROI (Return on Investment).
+- **🔋 Battery Monitoring**: Linear SOC interpolation for 48V banks and automated detection of critical voltage events.
+- **💡 Smart Interpretation**: Built-in logic to interpret daily data and provide health summaries.
 
-### Requisitos
-
-- Python 3.9 o superior
-- pip
-
-### Instalación
-
-```bash
-# Clonar o descargar el proyecto
-cd SolarPanel_APP
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Ejecutar la aplicación
-streamlit run app.py
-```
-
-La aplicación estará disponible en `http://localhost:8501`
-
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
 ```
 SolarPanel_APP/
-├── app.py                    # Punto de entrada principal
-├── requirements.txt          # Dependencias Python
-├── README.md                 # Esta documentación
-│
+├── app.py                    # Main application entry point
+├── requirements.txt          # Python dependencies
 ├── src/
-│   ├── database/
-│   │   ├── models.py         # Modelos SQLAlchemy
-│   │   └── connection.py     # Conexión a BD
-│   │
-│   ├── csv_processor/
-│   │   ├── parser.py         # Parser CSV
-│   │   └── column_mapper.py  # Mapeo de columnas
-│   │
-│   ├── calculations/
-│   │   ├── soc.py            # Cálculos SOC
-│   │   ├── alerts.py         # Detección de alertas
-│   │   └── aggregations.py   # KPIs y estadísticas
-│   │
-│   └── utils/
-│       └── export.py         # Exportación CSV/XLSX
-│
-├── pages/
-│   ├── 1_📊_Dashboard.py     # Dashboard principal
-│   ├── 2_📤_Upload.py        # Subir CSV
-│   ├── 3_📁_Histórico.py     # Explorar datos
-│   └── 4_⚙️_Configuración.py # Ajustes
-│
-├── data/
-│   ├── solar_data.db         # Base de datos SQLite
-│   └── samples/              # CSV de ejemplo
-│
-└── tests/                    # Tests unitarios
+│   ├── database/             # SQLite/SQLAlchemy models and connection
+│   ├── csv_processor/        # Flexible CSV parsing logic
+│   ├── calculations/         # SOC, Financial, and KPI logic
+│   └── utils/                # Export and formatting utilities
+├── pages/                    # Multi-page Streamlit interface
+└── data/                     # Local SQLite database (gitignored)
 ```
 
-## 📊 Características
+## ⚙️ Quick Start
 
-### Dashboard
+### Prerequisites
+- Python 3.12+ (Tested on 3.14)
+- pip
 
-- **KPIs**: Producción total, promedio diario, SOC medio, días con descarga profunda
-- **Gráficos interactivos**:
-  - Producción diaria (Wh)
-  - Voltajes min/max con líneas de referencia
-  - Tiempos de carga (bulk/absorption/float)
-  - Histograma de SOC
-- **Tabla de datos** con coloración por SOC
-- **Panel de alertas** con filtro por severidad
-
-### Cálculo de SOC
-
-Fórmula de interpolación lineal:
-
-```
-SOC% = clip((V_measured - V_cutoff) / (V_full - V_cutoff) * 100, 0, 100)
-```
-
-Valores por defecto (ajustables):
-- **V_full_pack**: 56.4V (100% SOC)
-- **V_cutoff**: 37.5V (0% SOC)
-- **V_warning**: 44V (advertencia)
-- **V_critical**: 42V (crítico)
-
-### Alertas Automáticas
-
-| Tipo | Condición | Severidad |
-|------|-----------|-----------|
-| Descarga profunda | V_min < 44V | ⚠️ Warning |
-| Descarga crítica | V_min < 42V | 🔴 Critical |
-| Sin absorción | absorption = 0 | ⚠️ Warning |
-| Sin flotación | float = 0 | ℹ️ Info |
-| Error detectado | error_text ≠ null | ⚠️ Warning |
-
-## 📋 Formato CSV
-
-El sistema acepta CSV con las siguientes columnas (nombres flexibles):
-
-| Columna Estándar | Nombres Aceptados |
-|------------------|-------------------|
-| timestamp | Date, Timestamp, Fecha |
-| yield_wh | Yield(Wh), Producción, Energy |
-| min_voltage | Min. battery voltage(V), Vmin |
-| max_voltage | Max. battery voltage(V), Vmax |
-| bulk_m | Time in bulk(m), Bulk |
-| absorption_m | Time in absorption(m), Absorción |
-| float_m | Time in float(m), Flotación |
-
-### CSV de Ejemplo
-
-Disponibles en `data/samples/`:
-- `sample_complete.csv` - Datos completos
-- `sample_alt_names.csv` - Nombres alternativos
-- `sample_partial.csv` - Solo columnas requeridas
-
-## ⚙️ Configuración del Sistema
-
-Configurado para:
-- **Sistema**: 5 kW fotovoltaico
-- **Banco**: 4× NARADA MPG12V200 en serie (48V, 200Ah)
-- **Ubicación**: La Unión, Los Ríos, Chile
-- **Zona horaria**: America/Santiago
-
-Todos los umbrales son ajustables desde la página de Configuración.
-
-## 🧪 Tests
-
-Ejecutar tests unitarios:
-
-```bash
-# Todos los tests
-python -m pytest tests/ -v
-
-# Tests específicos
-python -m pytest tests/test_soc.py -v
-python -m pytest tests/test_parser.py -v
-python -m pytest tests/test_alerts.py -v
-```
-
-## 📦 Base de Datos
-
-SQLite almacenado en `data/solar_data.db`:
-
-- **records**: Registros diarios de producción
-- **settings**: Configuración y umbrales
-- **alerts**: Alertas detectadas
-
-## 🔧 Desarrollo
-
-### Agregar nuevos tipos de alertas
-
-1. Añadir tipo en `src/calculations/alerts.py`:
-   ```python
-   class AlertType(Enum):
-       NEW_ALERT = 'new_alert'
+### Installation
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YOUR_USER/SolarPanel_APP.git
+   cd SolarPanel_APP
    ```
 
-2. Crear función de detección:
-   ```python
-   def detect_new_alert(value: float) -> List[AlertInfo]:
-       # Lógica de detección
+2. **Setup Virtual Environment:**
+   ```bash
+   python -m venv .venv
+   # Windows
+   .\.venv\Scripts\activate
+   # Linux/Mac
+   source .venv/bin/activate
    ```
 
-3. Añadir a `detect_alerts()`
+3. **Install Dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Modificar umbrales por defecto
+4. **Run the App:**
+   ```bash
+   streamlit run app.py
+   ```
 
-Editar `DEFAULT_SETTINGS` en `src/database/models.py`
+## 🔋 SOC Estimation Note
+The system uses professional interpolation for 48V banks (Default: 4x 12V batteries). 
+- **100% SOC**: 56.4V
+- **0% SOC**: 37.5V
+*These thresholds are fully adjustable within the app's configuration panel.*
 
-## 📝 Notas Técnicas
+## 📜 License
+MIT License - Created for the Victron Community in Chile 🇨🇱.
 
-- **SOC**: La estimación usa interpolación lineal, que es una aproximación práctica. La relación real voltaje-SOC es no lineal y depende de temperatura, corriente, y edad de las baterías.
-- **Zona horaria**: Los CSV se interpretan con America/Santiago. Ajustable en Configuración.
-- **Desgaste**: Las estimaciones de desgaste son aproximadas y dependen del historial completo.
-
-## 📜 Licencia
-
-MIT License - Uso libre para proyectos personales y comerciales.
-
-## 🤝 Contribuciones
-
-¡Contribuciones bienvenidas! Por favor:
-1. Fork el repositorio
-2. Crea una rama para tu feature
-3. Envía un Pull Request
-
----
-
-Desarrollado para sistemas Victron | La Unión, Los Ríos, Chile 🇨🇱
